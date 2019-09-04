@@ -1,0 +1,1 @@
+webpackJsonp([12],{80:function(a,n,p){a.exports=p.p+"images/images-Kando_atlas_.png"}});

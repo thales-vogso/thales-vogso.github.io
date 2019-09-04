@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="x5-page-mode" content="no-title">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,minimum-scale=1,maximum-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="full-screen" content="true">
+    <meta name="x5-orientation" content="portrait">
+    <meta name="x5-fullscreen" content="true">
+    <meta name="360-fullscreen" content="true">
+    <title>优衣库</title>
+<link href="css/app.css" rel="stylesheet"></head>
+
+<body>
+    <div id="ar-loading">
+        <div class="loadingbar"></div>
+        <div class="percent">loading...</div>
+    </div>
+    <div id="ar-video" style="display:none">
+        <video id="video" class="video" autoplay=""></video>
+        <canvas id="canvas" style="position:absolute;left:0px;top:0px;"></canvas>
+    </div>
+    <div id="ar-webgl" style="display:none">
+        <canvas id="ar-webgl-game"></canvas>
+        <div class="info">
+            <div class="tips"></div>
+        </div>
+        <div class="rotate"></div>
+    </div>
+    <div id="ar-create" style="display:none">
+        <canvas id="ar-create-game" width="640" height="1387" style="width:100%;height:100%"></canvas>
+        <div class="guide">
+            <div class="slogan"><img src="images/page-tips.png"></div>
+        </div>
+        <div class="back-btn" style="display:none"><img src="images/page-back.png"></div>
+    </div>
+    <script src="//jsapi.qq.com/get?api=ar.*,event.*,env.version,screen.*"></script>
+    <script type="text/javascript" src="//res.imtt.qq.com/tbs/tbs.js"></script>
+    <script src="//open.mobile.qq.com/sdk/qqapi.js?_bid=152"></script>
+    <script type="text/javascript" src="//res.imtt.qq.com/WebAR/Release/ARLib_v2.0.js"></script>
+    <script src="//res.imtt.qq.com/component/mtt_qb.min.js"></script>
+
+    <script>
+        var ARLib = window.$ARLib || {};
+        var activityUrl = '';
+        var cameraFacing = 1;
+        var animationFrame, resultCleanTimer = null, pointsCleanTimer = null;
+        var facePoints, featurePoints;
+        var isRecognizeStart = false;
+        var showFeaturePoints = true;
+
+        var QBVer = ARLib.getQQBrowserVersion();
+        var TBSVer = ARLib.getTBSVersion();
+        var isQQBrowser = ARLib.isQQBrowser();
+        var isTBS = ARLib.isTBS();
+        var isIOS = ARLib.isIOS();
+        var isAndroid = ARLib.isAndroid();
+        var isQBInstall = false;
+
+        var resultElement = document.getElementById("ar-recognition-result");
+        var resultImgElement = document.getElementById("ar-recognition-img");
+        var videoElement = document.getElementById("video");
+        var canvasElement = document.getElementById("canvas");
+        var context = canvasElement.getContext("2d");
+
+        if (!isQQBrowser) {
+            mtt.qb.isInstall(function(isInstall) {
+                //isInstall true:已经安装 false:未安装
+                console.log("mtt.qb.isInstall: isInstall=" + isInstall);
+                isQBInstall = isInstall;
+            });
+        }
+
+        function shouldDownloadQQBrowser(title) {
+            var ret = confirm(title);
+            if (ret == true) {
+                var a = document.createElement("a");
+                a.href = "http://mdc.html5.qq.com/d/directdown.jsp?channel_id=10983";
+                a.click();
+                a.remove();
+            } else {
+
+            }
+        }
+
+        function openURLWithQQBrowser() {
+            mtt.qb.openQb({
+                url: window.location.href
+            });
+        }		
+        
+        function isInMall(mode, callback){
+            var debug = '0';
+            var result = location.search.match(new RegExp("[?&]debug=([^&]+)", "i"));
+            if (result == null || result.length < 1) {
+                debug = '0';
+            }
+            else{
+                debug = result[1];
+            }            
+            
+            if(debug == '1' || mode == '1'){
+                callback({'code': 1});
+                guide();
+            }
+            
+            mqq.sensor.getLocation(function(retCode, latitude, longitude){
+                if(retCode == 0){
+                    url = '//apis.map.qq.com/ws/distance/v1/?';
+                    url = url + 'mode=walking&';
+                    url = url + 'from=' + latitude + ',' + longitude + '&';
+                    url = url + 'to=31.165198,121.397451&'; //优衣库地址：22.54169,113.954513
+                    url = url + 'key=UR6BZ-4GC6U-RBEVV-2FH55-33SNJ-KJFEH';
+                    console.log(1);
+                    $.ajax({
+                        type: "GET",
+                        url: url,
+                        data: {format:'json'},
+                        dataType: 'json',
+                        //timeout: 5000,
+                        json:"callback",
+                        success : function(res){		        	
+                            if(res.status != 0){
+                                callback({'code': -1});
+                            }
+                            else{
+                                var distance = res.result.elements[0].distance;		
+                                if(distance<=1000){
+                                    callback({'code': 1});
+                                    guide();
+                                }
+                                else{
+                                    callback({'code': 0});
+                                }
+                            }; 				
+                        },
+                        error:function(){
+                            callback({'code': -1});
+                        }												
+                    })
+                }
+                else{
+                    callback({'code': -1});
+                }
+            });
+            
+            
+        }
+       
+        function goDiscovery() {
+            //mqq.invoke(isAndroid ? 'sensor' : 'ui', 'notifyRenderReady', {}, function(ret) {
+            //	if (ret) {
+                    ARLib.openCamera(cameraFacing, function(ret) {
+                        if (ret) {
+                            if (isIOS) {
+                                //document.body.style.backgroundColor = "white";
+                            }
+                            if (isAndroid) {
+                                document.getElementById('ar-video').style.display = '';
+                            }
+                        }
+                    });
+            //	}
+            //});
+        }
+    </script>
+    <script>
+var CubeShow = null;	
+var _game = null,
+    _cartoon = null;
+var _isLoaded = false,
+    _isEnded = false;
+
+window.addEventListener('load', function(e){
+    isInMall('1', function(ret){
+        if(ret.code == 1){ //在店内
+            
+        }
+        else{ //在店外，执行活动规则
+        }
+    })
+});
+
+function onProgress(e){
+    document.getElementById("ar-loading").style.display = "";
+    document.querySelector("#ar-loading .percent").innerHTML = Math.floor(e.loaded * 10000)/100 + "%";
+}
+function onComplete(e){
+    document.getElementById("ar-loading").style.display = "none";
+}
+function onMcEnd(e){
+    var name = e.data;
+    if(name == "LC"){
+        _isEnded = true;
+        goDiscovery();
+        box();
+    }else{
+        var nameToID = {
+            "AIRism":1,
+            "DPJ":2,
+            "Dress":3,
+            "DryEX":4,
+            "Jeans":5,
+            "Kando":6,
+            "Kids":7,
+            "UT":8,
+            "Wireless":9,
+        }
+        var id = nameToID[name];
+        location.href = "https://act-digitalfsstore18001.uniqlo.cn/web/index.html?(" + id + ")?1";
+    }
+}
+function onCubeProgress(e){
+    if(_isEnded) onProgress(e);
+}
+function onCubeComplete(e){
+    _isLoaded = true;
+    box();
+}
+function box(){
+    if(_isLoaded && _isEnded){
+        document.getElementById("ar-loading").style.display = "none";
+        _game = new CubeShow.main(document.getElementById("ar-webgl-game"));
+        _game.addEventListener(CubeShow.Event.CUBE_CLICK, onCubeClick);
+        document.querySelector('#ar-create .back-btn').addEventListener("click", onback);
+        document.getElementById("ar-create").style.display = "none";
+        document.getElementById('ar-webgl').style.display = '';
+        document.querySelector('#ar-create .back-btn').style.display = '';
+        document.querySelector('#ar-create .guide').style.display = '';
+        _game.launch();
+    }
+}
+function guide(){
+    document.getElementById("ar-create").style.display = "";
+    document.querySelector('#ar-create .back-btn').style.display = 'none';
+    document.querySelector('#ar-create .guide').style.display = 'none';
+    document.getElementById('ar-webgl').style.display = 'none';
+    _cartoon = new CubeShow.Cartoon(document.getElementById("ar-create-game"));
+    _cartoon.on(CubeShow.Cartoon.Event.IMG_LOADING, onProgress);
+    _cartoon.on(CubeShow.Cartoon.Event.IMG_LOADED, onComplete);
+    _cartoon.on(CubeShow.Cartoon.Event.MC_END, onMcEnd);
+    _cartoon.play("LC");
+    CubeShow.Preload.load(onCubeProgress, onCubeComplete);
+}
+function onback(){
+    document.getElementById("ar-create").style.display = "none";
+    document.getElementById('ar-webgl').style.display = '';
+    document.querySelector('#ar-webgl .info').style.display = '';
+    _cartoon.clear();
+    _game.replay()
+}
+function onCubeClick(e){
+    var name = e.data.name;
+    document.getElementById("ar-create").style.display = "";
+    document.getElementById("ar-create-game").style.display = "";
+    document.getElementById('ar-webgl').style.display = 'none';
+    document.querySelector('#ar-webgl .info').style.display = '';
+    document.querySelector("#ar-create .guide .slogan img").src = "images/" + name + "-slogan.png";
+    document.querySelector("#ar-create .back-btn").style = ""
+    if(name == "Jeans"){
+        _game.paper();
+        document.getElementById('ar-webgl').style.display = '';
+        document.querySelector('#ar-webgl .info').style.display = 'none';
+        document.getElementById("ar-create-game").style.display = "none";
+        document.querySelector("#ar-create .back-btn").style.left = "0.5rem";
+    }
+    _cartoon.play(name);
+}
+    </script>
+<script type="text/javascript" src="./js/app.bundle.js"></script></body>
+</html>

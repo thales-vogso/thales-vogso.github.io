@@ -1,0 +1,164 @@
+html,body {
+	width: 100%;
+	height: 100%;
+	position: relative;
+	overflow: hidden;
+	background: transparent;
+	font-family: "\5FAE\8F6F\96C5\9ED1";
+	font-size: 50px;
+	margin: 0;
+	padding: 0;
+}
+
+#ar-loading{
+	width: 100%;
+	height: 100%;
+	margin: -60px 0 0 -60px;
+	left: 50%;
+	top:50%;
+	position: absolute;
+	z-index: 200;
+}
+#ar-loading .loadingbar{
+	width: 120px;
+	height: 100px;
+	background: url(../images/page-loading.png);
+	animation: loading-animation 1s steps(22) infinite;
+}
+#ar-loading .percent{
+	width: 120px;
+	text-align: center;
+	font-size: 0.5rem;
+}
+
+#ar-video{
+	width:100%;
+	height:100%;
+	z-index:1;
+}
+
+#ar-webgl{
+	position: absolute;
+	left:0;
+	top:0;
+	z-index: 2;
+}
+#ar-webgl .info{
+	position: absolute;
+	z-index:inherit;
+	width: 100%;
+	bottom:1%;
+	left:0;
+	pointer-events:none;
+}
+#ar-webgl .info .tips{
+	margin: -64px 0 0 -255px;
+	width: 510px;
+	height: 128px;
+	transform: scale(0.60);
+	position: relative;
+	left: 50%;
+	background-image: url(../images/page-tips.png);
+	animation: tips-animation 0.5s steps(9) infinite;
+}
+#ar-webgl .rotate{
+	position: fixed;
+	z-index: inherit;
+	pointer-events:none;
+	top: 0.7rem;
+	right: 0;
+	width: 128px;
+	height: 107px;
+	background-image: url(../images/page-rotate.png);
+	animation: rotate-animation 1.5s steps(37) infinite;
+}
+
+#ar-create{
+	position: absolute;
+	left:0;
+	top:0;
+	z-index: 3;
+}
+#ar-create .guide{
+	position: fixed;
+	z-index: 102;
+	bottom: 5%;
+	width:100%;
+	text-align: center;
+	font-size: 0;
+}
+#ar-create .guide img{
+	width: 100%;
+}
+#ar-create .guide .slogan{
+	width: 80%;
+	margin: 0 auto 5%;
+}
+#ar-create .guide .btn{
+	width: 35%;
+	margin: 0 auto;
+}
+#ar-create .back-btn{
+	position: fixed;
+	z-index: inherit;
+	top: 1rem;
+	right: 0.5rem;
+	width: 30%
+}
+#ar-create .back-btn img{
+	width: 100%;
+}
+
+
+@keyframes myfirst {
+	0% {
+		top: 1%;
+	}
+	100% {
+		top: 99%;
+	}
+}
+
+@-webkit-keyframes myfirst {
+	0% {
+		top: 1%;
+	}
+	100% {
+		top: 99%;
+	}
+}
+
+@keyframes blink {
+	0% {
+		transform: scale(0.8);
+	}
+	100% {
+		transform: scale(1.0);
+	}
+}
+@keyframes loading-animation{
+	from {
+		background-position-x: 0;
+	}
+	to {
+		background-position-x: -2640px;
+	}
+}
+@keyframes tips-animation{
+	from {
+		background-position-x: 0;
+	}
+	to {
+		background-position-x: -4590px;
+	}
+}
+@keyframes rotate-animation{
+	from {
+		background-position-x: 0;
+	}
+	to {
+		background-position-x: -4736px;
+	}
+}
+
+/*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IiIsImZpbGUiOiJjc3MvYXBwLmNzcyIsInNvdXJjZVJvb3QiOiIifQ==*/
